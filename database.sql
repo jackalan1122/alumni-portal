@@ -113,7 +113,7 @@ CREATE TABLE profile_views (
 CREATE TABLE activity_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    activity_type ENUM('application', 'profile_view', 'job_post', 'event_registration') NOT NULL,
+    activity_type ENUM('application', 'profile_view', 'job_post', 'job_delete', 'event_registration') NOT NULL,
     activity_description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -124,12 +124,6 @@ CREATE TABLE activity_log (
 -- Insert Default Admin User (password: admin123)
 INSERT INTO users (first_name, last_name, email, password, user_type) 
 VALUES ('Admin', 'User', 'admin@alumni.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
-
--- Insert Sample Jobs
-INSERT INTO job_listings (title, company, location, job_type, salary_range, description, requirements, posted_by, posted_by_name) VALUES
-('Senior Software Engineer', 'TechVision Solutions', 'San Francisco, CA', 'full-time', '$120,000 - $160,000', 'We are seeking an experienced Senior Software Engineer to join our growing team.', 'Bachelor degree in Computer Science\n5+ years experience\nProficiency in React, Node.js', 1, 'Admin User, Class of 2015'),
-('Marketing Manager', 'BrandCraft Agency', 'New York, NY', 'full-time', '$85,000 - $110,000', 'Join our dynamic marketing team to develop strategic campaigns.', 'Marketing degree\n3+ years experience\nDigital marketing expertise', 1, 'Admin User, Class of 2018'),
-('Product Designer', 'Creative Labs Inc', 'Remote', 'remote', '$90,000 - $120,000', 'Design intuitive user experiences for our SaaS products.', '4+ years design experience\nFigma proficiency\nStrong portfolio', 1, 'Admin User, Class of 2017');
 
 -- Insert Sample Events
 INSERT INTO events (title, description, event_date, event_time, location, event_type, created_by) VALUES

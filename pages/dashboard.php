@@ -39,36 +39,68 @@ $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = sanitize($_POST['title']);
-    $company = sanitize($_POST['company']);
-    $location = sanitize($_POST['location']);
-    $job_type = sanitize($_POST['job_type']);
-    $salary_range = sanitize($_POST['salary_range']);
-    $description = sanitize($_POST['description']);
-    $requirements = sanitize($_POST['requirements']);
-    $benefits = sanitize($_POST['benefits']);
-    
-    $posted_by_name = $user['first_name'] . ' ' . $user['last_name'] . ', Class of ' . $user['graduation_year'];
-    
-    $stmt = $db->prepare("
-        INSERT INTO job_listings (title, company, location, job_type, salary_range, description, requirements, benefits, posted_by, posted_by_name) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    
-    if ($stmt->execute([$title, $company, $location, $job_type, $salary_range, $description, $requirements, $benefits, $user['id'], $posted_by_name])) {
-        $success = 'Job posted successfully!';
-        logActivity($user['id'], 'job_post', 'Posted a new job: ' . $title);
-        // Refresh user jobs
+    if (isset($_POST['delete_job_id'])) {
+        // Handle job deletion
+        $job_id = (int)$_POST['delete_job_id'];
+        
+        // Verify the job belongs to the user
+        $stmt = $db->prepare("SELECT title FROM job_listings WHERE id = ? AND posted_by = ?");
+        $stmt->execute([$job_id, $user['id']]);
+        $job = $stmt->fetch();
+        
+        if ($job) {
+            $stmt = $db->prepare("DELETE FROM job_listings WHERE id = ? AND posted_by = ?");
+            if ($stmt->execute([$job_id, $user['id']])) {
+                $success = 'Job deleted successfully!';
+                logActivity($user['id'], 'job_delete', 'Deleted job: ' . $job['title']);
+                // Refresh user jobs
+                $stmt = $db->prepare("
+                    SELECT * FROM job_listings 
+                    WHERE posted_by = ? 
+                    ORDER BY created_at DESC 
+                    LIMIT 5
+                ");
+                $stmt->execute([$user['id']]);
+                $user_jobs = $stmt->fetchAll();
+            } else {
+                $error = 'Failed to delete job';
+            }
+        } else {
+            $error = 'Job not found or access denied';
+        }
+    } elseif (isset($_POST['title'])) {
+        // Handle job posting
+        $title = sanitize($_POST['title']);
+        $company = sanitize($_POST['company']);
+        $location = sanitize($_POST['location']);
+        $job_type = sanitize($_POST['job_type']);
+        $salary_range = sanitize($_POST['salary_range']);
+        $description = sanitize($_POST['description']);
+        $requirements = sanitize($_POST['requirements']);
+        $benefits = sanitize($_POST['benefits']);
+        
+        $posted_by_name = $user['first_name'] . ' ' . $user['last_name'] . ', Class of ' . $user['graduation_year'];
+        
         $stmt = $db->prepare("
-            SELECT * FROM job_listings 
-            WHERE posted_by = ? 
-            ORDER BY created_at DESC 
-            LIMIT 5
+            INSERT INTO job_listings (title, company, location, job_type, salary_range, description, requirements, benefits, posted_by, posted_by_name) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$user['id']]);
-        $user_jobs = $stmt->fetchAll();
-    } else {
-        $error = 'Failed to post job';
+        
+        if ($stmt->execute([$title, $company, $location, $job_type, $salary_range, $description, $requirements, $benefits, $user['id'], $posted_by_name])) {
+            $success = 'Job posted successfully!';
+            logActivity($user['id'], 'job_post', 'Posted a new job: ' . $title);
+            // Refresh user jobs
+            $stmt = $db->prepare("
+                SELECT * FROM job_listings 
+                WHERE posted_by = ? 
+                ORDER BY created_at DESC 
+                LIMIT 5
+            ");
+            $stmt->execute([$user['id']]);
+            $user_jobs = $stmt->fetchAll();
+        } else {
+            $error = 'Failed to post job';
+        }
     }
 }
 
@@ -293,7 +325,13 @@ require_once '../includes/header.php';
                         </div>
                         <span class="job-type-badge"><?php echo htmlspecialchars($job['job_type']); ?></span>
                         <span class="job-status <?php echo $job['status']; ?>"><?php echo ucfirst($job['status']); ?></span>
-                        <a href="job-detail.php?id=<?php echo $job['id']; ?>" class="job-link">View Details →</a>
+                        <div class="job-actions">
+                            <a href="job-detail.php?id=<?php echo $job['id']; ?>" class="job-link">View Details →</a>
+                            <form method="POST" action="" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this job?');">
+                                <input type="hidden" name="delete_job_id" value="<?php echo $job['id']; ?>">
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                        </div>
                     </div>
                     <?php endforeach; ?>
                 </div>
