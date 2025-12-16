@@ -241,3 +241,86 @@
         padding: 20px;
     }
 }
+
+/* Job Form Styles */
+.job-form {
+    margin-top: 20px;
+}
+
+.job-form .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.job-form .form-group {
+    flex: 1;
+}
+
+.job-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.job-form .form-group input,
+.job-form .form-group select,
+.job-form .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.job-form .form-group input:focus,
+.job-form .form-group select:focus,
+.job-form .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.job-form .btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.job-form .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Job Status */
+.job-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.job-status.active {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.job-status.closed {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.job-status.draft {
+    background: #FEF3C7;
+    color: #92400E;
+}

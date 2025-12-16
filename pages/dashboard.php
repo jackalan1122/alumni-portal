@@ -25,6 +25,53 @@ $stmt = $db->query("
 ");
 $recommended_jobs = $stmt->fetchAll();
 
+// Get user's posted jobs
+$stmt = $db->prepare("
+    SELECT * FROM job_listings 
+    WHERE posted_by = ? 
+    ORDER BY created_at DESC 
+    LIMIT 5
+");
+$stmt->execute([$user['id']]);
+$user_jobs = $stmt->fetchAll();
+
+$success = '';
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = sanitize($_POST['title']);
+    $company = sanitize($_POST['company']);
+    $location = sanitize($_POST['location']);
+    $job_type = sanitize($_POST['job_type']);
+    $salary_range = sanitize($_POST['salary_range']);
+    $description = sanitize($_POST['description']);
+    $requirements = sanitize($_POST['requirements']);
+    $benefits = sanitize($_POST['benefits']);
+    
+    $posted_by_name = $user['first_name'] . ' ' . $user['last_name'] . ', Class of ' . $user['graduation_year'];
+    
+    $stmt = $db->prepare("
+        INSERT INTO job_listings (title, company, location, job_type, salary_range, description, requirements, benefits, posted_by, posted_by_name) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    
+    if ($stmt->execute([$title, $company, $location, $job_type, $salary_range, $description, $requirements, $benefits, $user['id'], $posted_by_name])) {
+        $success = 'Job posted successfully!';
+        logActivity($user['id'], 'job_post', 'Posted a new job: ' . $title);
+        // Refresh user jobs
+        $stmt = $db->prepare("
+            SELECT * FROM job_listings 
+            WHERE posted_by = ? 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ");
+        $stmt->execute([$user['id']]);
+        $user_jobs = $stmt->fetchAll();
+    } else {
+        $error = 'Failed to post job';
+    }
+}
+
 $page_title = 'Dashboard';
 $include_dashboard_css = true;
 $include_dashboard_js = true;
@@ -71,6 +118,14 @@ require_once '../includes/header.php';
             <h1>Welcome back, <?php echo htmlspecialchars($user['first_name']); ?>!</h1>
             <p>Here's what's happening with your job search</p>
         </div>
+
+        <?php if ($success): ?>
+            <div class="alert alert-success"><?php echo $success; ?></div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?php echo $error; ?></div>
+        <?php endif; ?>
 
         <!-- Stats Cards -->
         <div class="stats-grid grid grid-cols-4">
@@ -167,6 +222,82 @@ require_once '../includes/header.php';
                 </div>
                 <?php endforeach; ?>
             </div>
+        </div>
+
+        <!-- Post a Job -->
+        <div class="post-job card" style="margin-top: 32px;">
+            <h2>Post a Job</h2>
+            <form method="POST" action="" class="job-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Job Title *</label>
+                        <input type="text" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Company *</label>
+                        <input type="text" name="company" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Location *</label>
+                        <input type="text" name="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Job Type</label>
+                        <select name="job_type">
+                            <option value="full-time">Full-time</option>
+                            <option value="part-time">Part-time</option>
+                            <option value="contract">Contract</option>
+                            <option value="remote">Remote</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Salary Range</label>
+                    <input type="text" name="salary_range" placeholder="e.g., $50,000 - $70,000">
+                </div>
+                <div class="form-group">
+                    <label>Job Description *</label>
+                    <textarea name="description" rows="4" required placeholder="Describe the job role and responsibilities..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Requirements</label>
+                    <textarea name="requirements" rows="3" placeholder="List the required skills and qualifications..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Benefits</label>
+                    <textarea name="benefits" rows="3" placeholder="Describe the benefits and perks..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Post Job</button>
+            </form>
+        </div>
+
+        <!-- My Posted Jobs -->
+        <div class="my-jobs card" style="margin-top: 32px;">
+            <h2>My Posted Jobs</h2>
+            <?php if (empty($user_jobs)): ?>
+                <p class="no-data">You haven't posted any jobs yet</p>
+            <?php else: ?>
+                <div class="job-grid grid grid-cols-1">
+                    <?php foreach ($user_jobs as $job): ?>
+                    <div class="job-card-mini">
+                        <h3><?php echo htmlspecialchars($job['title']); ?></h3>
+                        <p class="job-company"><?php echo htmlspecialchars($job['company']); ?></p>
+                        <div class="job-meta">
+                            <span>📍 <?php echo htmlspecialchars($job['location']); ?></span>
+                            <?php if ($job['salary_range']): ?>
+                            <span>💰 <?php echo htmlspecialchars($job['salary_range']); ?></span>
+                            <?php endif; ?>
+                            <span>👁️ <?php echo $job['views']; ?> views</span>
+                        </div>
+                        <span class="job-type-badge"><?php echo htmlspecialchars($job['job_type']); ?></span>
+                        <span class="job-status <?php echo $job['status']; ?>"><?php echo ucfirst($job['status']); ?></span>
+                        <a href="job-detail.php?id=<?php echo $job['id']; ?>" class="job-link">View Details →</a>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </main>
 </div>
