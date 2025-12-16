@@ -32,6 +32,17 @@ $current_user = getCurrentUser();
                         <li><a href="<?php echo SITE_URL; ?>/pages/dashboard.php">Dashboard</a></li>
                         <?php endif; ?>
                     </ul>
+                    <div class="mobile-nav-actions">
+                        <?php if (isLoggedIn()): ?>
+                            <a href="<?php echo SITE_URL; ?>/pages/profile.php" class="btn-secondary">
+                                <?php echo htmlspecialchars($current_user['first_name']); ?>
+                            </a>
+                            <a href="<?php echo SITE_URL; ?>/auth/logout.php" class="btn-primary">Logout</a>
+                        <?php else: ?>
+                            <a href="<?php echo SITE_URL; ?>/auth/login.php" class="btn-secondary">Login</a>
+                            <a href="<?php echo SITE_URL; ?>/auth/register.php" class="btn-primary">Register</a>
+                        <?php endif; ?>
+                    </div>
                 </nav>
 
                 <div class="header-actions">
@@ -45,6 +56,12 @@ $current_user = getCurrentUser();
                         <a href="<?php echo SITE_URL; ?>/auth/register.php" class="btn-primary">Register</a>
                     <?php endif; ?>
                 </div>
+
+                <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
             </div>
         </div>
     </header>
