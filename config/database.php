@@ -30,7 +30,7 @@ function getDB() {
 }
 
 // Site Configuration
-define('SITE_URL', 'http://localhost/alumni-portal');
+define('SITE_URL', '/alumni-portal');
 define('SITE_NAME', 'Alumni & Career Services');
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
 define('MAX_FILE_SIZE', 5242880); // 5MB
